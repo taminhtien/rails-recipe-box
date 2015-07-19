@@ -51,6 +51,16 @@ class RecipesController < ApplicationController
     end
 
     def recipe_params
-      params.require(:recipe).permit(:title, :description)
+      params.require(:recipe).permit(
+        :title,
+        :description,
+        :image,
+        # To destroy nested models, rails uses a virtual attribute called _destroy.
+        # When _destroy is set, the nested model will be deleted. If the record
+        # is persisted, rails performs id field lookup to destroy the real record,
+        # so if id wasn't specified, it will treat current set of parameters
+        # like a parameters for a new record.
+        ingredients_attributes: [:id, :name, :_destroy],
+        directions_attributes: [:id, :step, :_destroy])
     end
 end
