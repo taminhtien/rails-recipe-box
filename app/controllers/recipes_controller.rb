@@ -1,6 +1,7 @@
 class RecipesController < ApplicationController
   before_action :find_recipe, only: [:show, :edit, :update, :destroy]
-
+  before_action :authenticate_user!, except: [:show, :index]
+  before_action :authorized_user, only: [:edit, :update, :destroy]
   # GET /users
   def index
     @recipes = Recipe.all.order("created_at DESC")
@@ -12,12 +13,12 @@ class RecipesController < ApplicationController
 
   # GET /users/new
   def new
-    @recipe = Recipe.new
+    @recipe = current_user.recipes.build
   end
 
   # POST /users
   def create
-    @recipe = Recipe.create(recipe_params)
+    @recipe = current_user.recipes.build(recipe_params)
     if @recipe.save
       redirect_to @recipe, notice: "Successfully created new recipe"
     elsif
@@ -55,6 +56,7 @@ class RecipesController < ApplicationController
         :title,
         :description,
         :image,
+        :user_id,
         # To destroy nested models, rails uses a virtual attribute called _destroy.
         # When _destroy is set, the nested model will be deleted. If the record
         # is persisted, rails performs id field lookup to destroy the real record,
@@ -62,5 +64,10 @@ class RecipesController < ApplicationController
         # like a parameters for a new record.
         ingredients_attributes: [:id, :name, :_destroy],
         directions_attributes: [:id, :step, :_destroy])
+    end
+
+    def authorized_user
+      @recipe = current_user.recipes.find_by[id: params[:id]]
+      redirect_to recipes_path, notice: "Not authorized this recipe" if @recipe.nil?
     end
 end
